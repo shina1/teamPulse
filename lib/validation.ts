@@ -7,6 +7,8 @@ export const LoginSchema = z.object({
 
 export const AddTeamSchema = z.object({
   name: z.string().min(2),
+  averageSentiment: z.string().min(3),
+   memberCount: z.number().default(0)
 });
 
 export const AddMemberSchema = z.object({

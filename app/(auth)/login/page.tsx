@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { loginSchema, type LoginFormData } from "@/lib/schemas"
 import { mockLogin } from "@/lib/mock-data"
 import { Loader2 } from "lucide-react"
+import { LoginAction } from "@/lib/actions/auth"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,8 +30,15 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const success = await mockLogin(data.email, data.password)
-      if (success) {
+
+      const formData = new FormData();
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+
+      const response = await LoginAction(formData);
+      console.log('response', response);
+
+      if (response?.status == 200) {
         toast({
           title: "Success",
           description: "Login successful!",

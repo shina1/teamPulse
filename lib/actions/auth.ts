@@ -5,16 +5,19 @@ import { loginUser } from '../auth';
 import { LoginSchema } from '../validation';
 
 export const LoginAction = async (formData: FormData) => {
+  console.log('login form data', formData);
+
   const data = Object.fromEntries(formData.entries());
   const parsedData = LoginSchema.safeParse(data);
 
   if (!parsedData.success) {
-    return { error: 'Invalid credentials' };
+    return { status: 400, error: 'Invalid credentials' };
   }
 
   const user = await loginUser(parsedData.data.email, parsedData.data.password);
   if (!user) {
-    return { error: 'Invalid email or password' };
+    return { status: 401, error: 'Invalid email or password' };
   }
+  return { status: 200, data: user };
   redirect('/dashboard');
 };

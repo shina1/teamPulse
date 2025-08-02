@@ -18,10 +18,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
-import { mockFetchTeams, type Team } from "@/lib/mock-data"
 import { teamSchema, type TeamFormData } from "@/lib/schemas"
 import { SentimentBadge } from "@/components/sentiment-badge"
 import { TeamCardSkeleton } from "@/components/loading-skeleton"
+import { addTeamsAction, fetchAllTeams } from "@/lib/actions/team"
+import { AddTeamResp, Team } from "@/types"
 
 export default function DashboardPage() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -39,8 +40,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const data = await mockFetchTeams()
-        setTeams(data)
+        const allTeams = await fetchAllTeams();
+        if ('success' in allTeams && allTeams.status === 200 && allTeams.count > 0) {
+          setTeams(allTeams?.data);
+        }
+
       } catch (error) {
         toast({
           title: "Error",
@@ -56,15 +60,13 @@ export default function DashboardPage() {
   }, [toast])
 
   const onSubmit = async (data: TeamFormData) => {
-    // Mock team creation
-    const newTeam: Team = {
-      id: Date.now().toString(),
-      name: data.name,
-      averageSentiment: "neutral",
-      memberCount: 0,
+  
+    const resp = await addTeamsAction(data)
+
+    if (resp?.success) {
+      setTeams((prev) => [...prev, resp.data as Team])
     }
 
-    setTeams((prev) => [...prev, newTeam])
     toast({
       title: "Success",
       description: "Team created successfully!",
@@ -123,26 +125,26 @@ export default function DashboardPage() {
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => <TeamCardSkeleton key={i} />)
           : teams.map((team) => (
-              <Link key={team.id} href={`/teams/${team.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      {team.name}
-                      <Users className="h-5 w-5 text-muted-foreground" />
-                    </CardTitle>
-                    <CardDescription>
-                      {team.memberCount} {team.memberCount === 1 ? "member" : "members"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Average Sentiment</span>
-                      <SentimentBadge sentiment={team.averageSentiment} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            <Link key={team.id} href={`/teams/${team.id}`}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {team.name}
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                  </CardTitle>
+                  <CardDescription>
+                    {team.memberCount} {team.memberCount === 1 ? "member" : "members"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Average Sentiment</span>
+                    <SentimentBadge sentiment={team.averageSentiment || 'neutral'} />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
       </div>
 
       {!isLoading && teams.length === 0 && (

@@ -5,7 +5,11 @@ const prisma = new PrismaClient();
 const SESSION_KEY = 'session_user';
 
 export async function loginUser(email: string, password: string) {
+  console.log('credentials', email, password);
+
   const user = await prisma.user.findUnique({ where: { email } });
+  console.log('user', user);
+
   if (!user || user.password !== password) return null;
 
   (await cookies()).set(SESSION_KEY, user.id, {

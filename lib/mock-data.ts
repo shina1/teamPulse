@@ -1,8 +1,8 @@
 export interface Team {
   id: string
   name: string
-  averageSentiment: "happy" | "neutral" | "sad"
-  memberCount: number
+  averageSentiment?: "happy" | "neutral" | "sad"
+  memberCount?: number
 }
 
 export interface Member {

@@ -17,6 +17,8 @@ model Team {
   id        String    @id @default(cuid())
   name      String
   members   Member[]
+  averageSentiment String   @default("neutral") 
+  memberCount      Int      @default(0)
   sentimentLogs  SentimentLog[]
   createdAt DateTime  @default(now())
 }
