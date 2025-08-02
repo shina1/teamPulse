@@ -26,6 +26,17 @@ export interface AddTeamResp {
   status?: undefined;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  sentiment: Sentiment;
+  team: Team;
+  teamId: string;
+  sentimentLogs: SentimentLog[];
+  createdAt: Date;
+}
+
 export type FetchAllTeamsResponse =
   | { success: true; status: 200; data: any[]; count: number }
   | { status: 401; error: string };

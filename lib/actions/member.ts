@@ -2,13 +2,15 @@
 
 import { getSessionUserId } from '../auth';
 import { prisma } from '../prisma';
+import { MemberFormData } from '../schemas';
 import { AddMemberSchema } from '../validation';
 
-export const addMemberAction = async (formData: FormData) => {
-  const data = Object.fromEntries(formData.entries());
-  const parsedData = AddMemberSchema.safeParse(data);
+export const addMemberAction = async (formData: MemberFormData) => {
+  //   const data = Object.fromEntries(formData.entries());
+  const parsedData = AddMemberSchema.safeParse(formData);
 
   if (!parsedData.success) {
+    console.error(parsedData.error.flatten());
     return { error: 'Invalid input' };
   }
 
@@ -24,7 +26,7 @@ export const addMemberAction = async (formData: FormData) => {
     },
   });
 
-  return { success: true, data: newMember };
+  return { success: true, status: 201, data: newMember };
 };
 
 export const deleteMemberAction = async (memberId: string) => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -24,6 +25,9 @@ import { memberSchema, type MemberFormData } from "@/lib/schemas"
 import { SentimentBadge } from "@/components/sentiment-badge"
 import { MemberRowSkeleton } from "@/components/loading-skeleton"
 import { useDebounce } from "@/hooks/use-debounce"
+import { getTeamById } from "@/lib/actions/team"
+import { TeamMember } from "@/types"
+import { addMemberAction } from "@/lib/actions/member"
 
 const MEMBERS_PER_PAGE = 10
 
@@ -32,8 +36,8 @@ export default function TeamDetailsPage() {
   const teamId = params.id as string
   const { toast } = useToast()
 
-  const [team, setTeam] = useState<Team | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+  const [team, setTeam] = useState<any>(null)
+  const [members, setMembers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -53,9 +57,16 @@ export default function TeamDetailsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [teamData, membersData] = await Promise.all([mockFetchTeam(teamId), mockFetchMembers(teamId)])
-        setTeam(teamData)
-        setMembers(membersData)
+        // const [teamData, membersData] = await Promise.all([mockFetchTeam(teamId), mockFetchMembers(teamId)])
+        const team = await getTeamById(teamId);
+
+
+        if (team?.success) {
+          setTeam(team?.data)
+        }
+
+        // setTeam(teamData)
+        // setMembers(membersData)
       } catch (error) {
         toast({
           title: "Error",
@@ -70,37 +81,49 @@ export default function TeamDetailsPage() {
     fetchData()
   }, [teamId, toast])
 
+  console.log('team', team);
   const filteredMembers = useMemo(() => {
-    return members.filter(
-      (member) =>
+    const result = team?.members.filter(
+      (member: TeamMember) =>
         member.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         member.email.toLowerCase().includes(debouncedSearchQuery.toLowerCase()),
     )
-  }, [members, debouncedSearchQuery])
+    return result
+  }, [members, debouncedSearchQuery, team])
+
+
+  // const paginatedMembers = useMemo(() => {
+  //   const startIndex = (currentPage - 1) * MEMBERS_PER_PAGE
+  //   return filteredMembers?.slice(startIndex, startIndex + MEMBERS_PER_PAGE)
+  // }, [filteredMembers, currentPage])
 
   const paginatedMembers = useMemo(() => {
-    const startIndex = (currentPage - 1) * MEMBERS_PER_PAGE
-    return filteredMembers.slice(startIndex, startIndex + MEMBERS_PER_PAGE)
-  }, [filteredMembers, currentPage])
+    const startIndex = (currentPage - 1) * MEMBERS_PER_PAGE;
+    return (filteredMembers ?? []).slice(startIndex, startIndex + MEMBERS_PER_PAGE);
+  }, [filteredMembers, currentPage]);
 
-  const totalPages = Math.ceil(filteredMembers.length / MEMBERS_PER_PAGE)
+  const totalPages = Math.ceil((filteredMembers ?? []).length / MEMBERS_PER_PAGE)
 
   const onSubmit = async (data: MemberFormData) => {
-    const newMember: Member = {
-      id: Date.now().toString(),
+    const newMember = {
       name: data.name,
       email: data.email,
       sentiment: data.sentiment,
       teamId: teamId,
     }
 
-    setMembers((prev) => [...prev, newMember])
-    toast({
-      title: "Success",
-      description: "Member added successfully!",
-    })
-    setIsDialogOpen(false)
-    form.reset()
+    const resp = await addMemberAction(newMember)
+
+    console.log('new member data', resp);
+    if (resp?.status == 201) {
+      setMembers((prev) => [...prev, resp?.data])
+      toast({
+        title: "Success",
+        description: "Member added successfully!",
+      })
+      setIsDialogOpen(false)
+      form.reset()
+    }
   }
 
   const handleDeleteMember = (memberId: string) => {
@@ -118,6 +141,9 @@ export default function TeamDetailsPage() {
       description: "Sentiment updated!",
     })
   }
+
+  console.log('members', members);
+
 
   if (isLoading) {
     return (
@@ -226,7 +252,7 @@ export default function TeamDetailsPage() {
         <CardHeader>
           <CardTitle>Team Members</CardTitle>
           <CardDescription>
-            {filteredMembers.length} {filteredMembers.length === 1 ? "member" : "members"}
+            {(filteredMembers ?? []).length} {(filteredMembers ?? []).length === 1 ? "member" : "members"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -244,7 +270,7 @@ export default function TeamDetailsPage() {
           </div>
 
           <div className="space-y-4">
-            {paginatedMembers.map((member) => (
+            {paginatedMembers.map((member: TeamMember) => (
               <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -262,9 +288,9 @@ export default function TeamDetailsPage() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <SentimentBadge sentiment={member.sentiment} />
+                  {/* <SentimentBadge sentiment={member.sentiment} /> */}
                   <Select
-                    value={member.sentiment}
+                    value={member.sentiment.toLowerCase()}
                     onValueChange={(value: "happy" | "neutral" | "sad") => handleSentimentChange(member.id, value)}
                   >
                     <SelectTrigger className="w-32">
@@ -289,7 +315,7 @@ export default function TeamDetailsPage() {
             ))}
           </div>
 
-          {filteredMembers.length === 0 && (
+          {(filteredMembers ?? []).length === 0 && (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 {searchQuery ? "No members found matching your search." : "No members in this team yet."}
@@ -301,7 +327,7 @@ export default function TeamDetailsPage() {
             <div className="flex items-center justify-between mt-6">
               <p className="text-sm text-muted-foreground">
                 Showing {(currentPage - 1) * MEMBERS_PER_PAGE + 1} to{" "}
-                {Math.min(currentPage * MEMBERS_PER_PAGE, filteredMembers.length)} of {filteredMembers.length} members
+                {Math.min(currentPage * MEMBERS_PER_PAGE, (filteredMembers ?? []).length)} of {(filteredMembers ?? []).length} members
               </p>
               <div className="flex items-center space-x-2">
                 <Button
