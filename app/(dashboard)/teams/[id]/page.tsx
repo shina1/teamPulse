@@ -136,7 +136,7 @@ export default function TeamDetailsPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-semibold">Team not found</h2>
-        <p className="text-muted-foreground mt-2">The team you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mt-2">The team you&apos;re looking for doesn&apos;t exist.</p>
       </div>
     )
   }
