@@ -22,7 +22,7 @@ export const addTeamsAction = async (formData: TeamFormData) => {
 
   const team = await prisma.team.create({
     data: {
-      name: parsedData.data.name
+      name: parsedData.data.name,
     },
   });
 
