@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String
+}
+
+model Team {
+  id        String    @id @default(cuid())
+  name      String
+  members   Member[]
+  sentimentLogs  SentimentLog[]
+  createdAt DateTime  @default(now())
+}
+
+model Member {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  sentiment  Sentiment
+  team       Team     @relation(fields: [teamId], references: [id])
+  teamId     String
+  sentimentLogs SentimentLog[]
+  createdAt  DateTime @default(now())
+}
+
+model SentimentLog {
+  id        String     @id @default(cuid())
+  memberId  String
+  teamId    String
+  sentiment Sentiment
+  date      DateTime   @default(now())
+  member    Member     @relation(fields: [memberId], references: [id])
+  team      Team       @relation(fields: [teamId], references: [id])
+}
+
+model AppSettings {
+  id               String   @id @default("singleton") // Only one row
+  checkInsEnabled  Boolean  @default(true)
+  frequency        Frequency @default(WEEKLY)
+}
+
+enum Sentiment {
+  HAPPY
+  NEUTRAL
+  SAD
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
