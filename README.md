@@ -39,24 +39,50 @@ cd teamPulse
 ```
 
 ## 2. **Install dependency**
+
 ```bash
 pnpm install
 ```
+
 ## 3. Set Up Environment Variables
+
 # .env
+
 DATABASE_URL="postgresql://postgres:<password>@localhost:5432/teampulse"
 
 ## 4. Create the Local Database
+
 # Login to Postgres shell
+
 ```bash
 psql -U postgres
 ```
 
 # Inside psql shell
+
 ```bash
 CREATE DATABASE teampulse;
 
 \q
 ```
 
+## 5. Generate Prisma Client & Run Migrations
 
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+## 6. Seed the Admin User
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+# Authentication
+TeamPulse uses cookie-based session auth. The login system accepts a single hardcoded user:
+
+- Email: `admin@teampulse.dev`
+- Password: `password123`
+
+Once logged in, a cookie (session_user) is stored to authorize further requests.
