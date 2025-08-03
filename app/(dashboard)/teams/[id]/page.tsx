@@ -27,7 +27,8 @@ import { MemberRowSkeleton } from "@/components/loading-skeleton"
 import { useDebounce } from "@/hooks/use-debounce"
 import { getTeamById } from "@/lib/actions/team"
 import { TeamMember } from "@/types"
-import { addMemberAction } from "@/lib/actions/member"
+import { addMemberAction, deleteMemberAction } from "@/lib/actions/member"
+import { addSentiment } from "@/lib/actions/sentiment"
 
 const MEMBERS_PER_PAGE = 10
 
@@ -113,8 +114,6 @@ export default function TeamDetailsPage() {
     }
 
     const resp = await addMemberAction(newMember)
-
-    console.log('new member data', resp);
     if (resp?.status == 201) {
       setMembers((prev) => [...prev, resp?.data])
       toast({
@@ -126,23 +125,40 @@ export default function TeamDetailsPage() {
     }
   }
 
-  const handleDeleteMember = (memberId: string) => {
-    setMembers((prev) => prev.filter((m) => m.id !== memberId))
-    toast({
-      title: "Success",
-      description: "Member removed successfully!",
-    })
+  const handleDeleteMember = async (memberId: string) => {
+    const resp = await deleteMemberAction(memberId)
+    if (resp?.success && resp?.status == 204) {
+      setMembers((prev) => prev.filter((m) => m.id !== memberId))
+      toast({
+        title: "Success",
+        description: "Member removed successfully!",
+      })
+    }
+
+
   }
 
-  const handleSentimentChange = (memberId: string, newSentiment: "happy" | "neutral" | "sad") => {
-    setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, sentiment: newSentiment } : m)))
-    toast({
-      title: "Success",
-      description: "Sentiment updated!",
-    })
-  }
+  const handleSentimentChange = async (memberId: string, newSentiment: "happy" | "neutral" | "sad") => {
 
-  console.log('members', members);
+    const payload = {
+      memberId: memberId,
+      sentiment: newSentiment
+    }
+
+    const resp = await addSentiment(payload)
+
+    // console.log('add sentiment:', resp);
+
+    if (resp?.success) {
+      setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, sentiment: newSentiment } : m)))
+      toast({
+        title: "Success",
+        description: "Sentiment updated!",
+      })
+    }
+
+
+  }
 
 
   if (isLoading) {

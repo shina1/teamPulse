@@ -93,4 +93,8 @@ export const fetchAllTeams = async (): Promise<FetchAllTeamsResponse> => {
 export const deleteTeamAction = async (teamId: string) => {
   if (!teamId) return { error: 'Team id is required' };
   await prisma.team.delete({ where: { id: teamId } });
+  return {
+    success: true,
+    status: 204
+  }
 };

@@ -4,9 +4,14 @@ import { getSessionUserId } from '../auth';
 import { prisma } from '../prisma';
 import { UpdateSentimentSchema } from '../validation';
 
-export const addSentiment = async (formData: FormData) => {
-  const data = Object.fromEntries(formData.entries());
-  const parsedData = UpdateSentimentSchema.safeParse(data);
+type SentimentType = {
+  memberId: string;
+  sentiment: 'happy' | 'neutral' | 'sad';
+};
+
+export const addSentiment = async (formData: SentimentType) => {
+  //   const data = Object.fromEntries(formData.entries());
+  const parsedData = UpdateSentimentSchema.safeParse(formData);
 
   if (!parsedData.success) return { error: 'Invalid input' };
 
@@ -18,6 +23,8 @@ export const addSentiment = async (formData: FormData) => {
     data: { sentiment: parsedData.data.sentiment },
   });
 
+  console.log('sentimentUpdate', sentimentUpdate);
+
   // Log sentiment change for trends
   await prisma.sentimentLog.create({
     data: {
@@ -27,5 +34,10 @@ export const addSentiment = async (formData: FormData) => {
     },
   });
 
-  return { success: true, message: 'Sentiment updated', data: sentimentUpdate };
+  return {
+    success: true,
+    message: 'Sentiment updated',
+    status: 201,
+    data: sentimentUpdate,
+  };
 };

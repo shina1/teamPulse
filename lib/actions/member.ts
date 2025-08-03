@@ -31,5 +31,9 @@ export const addMemberAction = async (formData: MemberFormData) => {
 
 export const deleteMemberAction = async (memberId: string) => {
   if (!memberId) return { error: 'id is required' };
+  await prisma.sentimentLog.deleteMany({
+    where: { memberId },
+  });
   await prisma.member.delete({ where: { id: memberId } });
+  return { success: true, status: 204 };
 };
