@@ -34,7 +34,7 @@
 ### 1. **Clone the Repo**
 
 ```bash
-git https://github.com/shina1/teamPulse
+git clone https://github.com/shina1/teamPulse
 cd teamPulse
 ```
 
